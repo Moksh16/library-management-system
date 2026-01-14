@@ -23,18 +23,14 @@ def create_post(post: schemas.PostCreate,db: Session = Depends(get_db), user_id 
     # cursor.execute("""insert into books (name,author,rating,year_published) values (%s,%s,%s,%s) returning *""",(post.name,post.author,post.rating,post.year_published))
     # new_post = cursor.fetchone()
     # conn.commit()
-
+    print(user_id)
     new_post = models.Post(**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
     return new_post
-
-
-
-
 @router.get("/{id}")
-def get_post(id: int, response: Response,db: Session = Depends(get_db)):
+def get_post(id: int, response: Response,db: Session = Depends(get_db),user_id : int = Depends(oauth2.get_current_user)):
     # cursor.execute("""select * from books where id=%s""",str(id))
     # post =cursor.fetchone()
 
@@ -49,7 +45,7 @@ def get_post(id: int, response: Response,db: Session = Depends(get_db)):
 
 
 @router.delete('/{id}', status_code = status.HTTP_204_NO_CONTENT)
-def delete_post(id : int,db: Session = Depends(get_db)):
+def delete_post(id : int,db: Session = Depends(get_db),user_id : int = Depends(oauth2.get_current_user)):
     # cursor.execute("""delete from books where id=%s returning *""",str(id))
     # deleted_post = cursor.fetchone()
 

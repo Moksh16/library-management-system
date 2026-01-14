@@ -15,7 +15,7 @@ class Post(BaseModel):
     name: str
     author: str
     year_published: int
-    created_at: datetime
+    posted_at: datetime
     class Config:
         orm_mode = True
 
@@ -42,4 +42,4 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    id: Optional[str] =None
+    id: Optional[int] =None
