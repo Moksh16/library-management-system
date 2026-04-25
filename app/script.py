@@ -1,19 +1,16 @@
 from fastapi import FastAPI, Response,status,HTTPException, Depends
 from fastapi.params import Body
-from pydantic import BaseModel
-from typing import Optional, List
 from random import randrange
-from passlib.context import CryptContext
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
-from .database import engine, SessionLocal, get_db
-from sqlalchemy.orm import Session
-from . import schemas,utils
-from . import models
+from .database import engine
+from . import models, votes
 from .routers import post,users,auth
-models.Base.metadata.create_all(bind=engine)
+from fastapi.middleware.cors import CORSMiddleware
+# models.Base.metadata.create_all(bind=engine)
 
+from .config import settings
 
 
 app = FastAPI()
@@ -30,12 +27,21 @@ app = FastAPI()
 #         print("error,",error)
 #         time.sleep(2)
 
+origins=["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 my_post = [{"name": "Fountainhead", "rating":5, "published":True,"id":1},{"name": "Intelligent Investor", "rating":5,"published": True,"id":2}]
 
 app.include_router(post.router)
 app.include_router(users.router)
 app.include_router(auth.router)
+app.include_router(votes.router)
 
 def find_post(id):
     for p in my_post:
