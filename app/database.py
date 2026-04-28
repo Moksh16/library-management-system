@@ -1,16 +1,25 @@
+import os
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from .config import settings
-SQLALCHEMY_database_url = f'postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}'
-engine = create_engine(SQLALCHEMY_database_url)
-SessionLocal = sessionmaker(autocommit=False,autoflush=False,bind=engine)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    # fallback for local
+    DATABASE_URL = "postgresql://username:password@localhost:5432/dbname"
+
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
 def get_db():
     db = SessionLocal()
-    
     try:
         yield db
     finally:
