@@ -2,6 +2,7 @@ from fastapi import FastAPI, Response,status,HTTPException, Depends, APIRouter
 from .. import utils,schemas,models
 from sqlalchemy.orm import Session
 from ..database import SessionLocal, get_db
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(
     prefix='/users',
@@ -10,14 +11,21 @@ router = APIRouter(
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate , db: Session = Depends(get_db)):
+    try: 
+        hashed_password = utils.hash(user.password[:72])
+        user.password = hashed_password
+        new_user = models.Users(**user.dict())
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Email already registered"
+        )
 
-    hashed_password = utils.hash(user.password[:72])
-    user.password = hashed_password
-    new_user = models.Users(**user.dict())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
 
 @router.get('/users/{id}', response_model=schemas.UserOut)
 def getUsers(id:int, db : Session = Depends(get_db)):
